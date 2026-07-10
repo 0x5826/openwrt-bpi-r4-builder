@@ -14,6 +14,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout Builder Repo
@@ -39,8 +41,8 @@ jobs:
     - name: Update & Install Feeds
       run: |
         cd openwrt
-        echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> feeds.conf.default
-        echo "src-git dante_extras https://github.com/0x5826/openwrt-packages-extras.git" >> feeds.conf.default
+        grep -E -q "^[[:space:]]*src-git[[:space:]]+nikki([[:space:]]|$)" feeds.conf.default || echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> feeds.conf.default
+        grep -E -q "^[[:space:]]*src-git[[:space:]]+dante_extras([[:space:]]|$)" feeds.conf.default || echo "src-git dante_extras https://github.com/0x5826/openwrt-packages-extras.git" >> feeds.conf.default
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
@@ -68,7 +70,7 @@ jobs:
         mkdir -p ${{ github.workspace }}/publish
         TARGET_DIR="bin/targets/mediatek/filogic"
         if [ -d "$TARGET_DIR" ]; then
-          find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.img" -o -name "*.manifest" \) -exec cp {} ${{ github.workspace }}/publish/ \;
+          find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.img" -o -name "*.img.gz" -o -name "*.fip" -o -name "*.manifest" -o -name "*.itb" -o -name "*.buildinfo" \) -exec cp {} ${{ github.workspace }}/publish/ \;
         else
           echo "Directory $TARGET_DIR does not exist. Compilation might have failed."
           exit 1
@@ -80,3 +82,15 @@ jobs:
       with:
         name: OpenWrt_BPi-R4_firmware_${{ env.FILE_DATE }}
         path: ${{ github.workspace }}/publish/*
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ env.FILE_DATE }}
+        name: OpenWrt_BPi-R4_Build_${{ env.FILE_DATE }}
+        body: |
+          Banana Pi BPi-R4 自动编译固件
+          编译时间：${{ env.FILE_DATE }} (北京时间)
+          源码仓库：${{ env.REPO_URL }} (分支: ${{ env.REPO_BRANCH }})
+        files: ${{ github.workspace }}/publish/*
