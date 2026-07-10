@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # 允许手动触发
 
 env:
-  REPO_URL: https://github.com/0x5826/openwrt-25.12
+  REPO_URL: https://github.com/0x5826/openwrt-mtk
   REPO_BRANCH: openwrt-25.12
   CONFIG_FILE: bpi-r4.config
   TZ: Asia/Shanghai
@@ -41,8 +41,6 @@ jobs:
     - name: Update & Install Feeds
       run: |
         cd openwrt
-        grep -E -q "^[[:space:]]*src-git[[:space:]]+nikki([[:space:]]|$)" feeds.conf.default || echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> feeds.conf.default
-        grep -E -q "^[[:space:]]*src-git[[:space:]]+dante_extras([[:space:]]|$)" feeds.conf.default || echo "src-git dante_extras https://github.com/0x5826/openwrt-packages-extras.git" >> feeds.conf.default
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
