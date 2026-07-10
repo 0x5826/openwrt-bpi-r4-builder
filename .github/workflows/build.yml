@@ -39,6 +39,8 @@ jobs:
     - name: Update & Install Feeds
       run: |
         cd openwrt
+        echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> feeds.conf.default
+        echo "src-git dante_extras https://github.com/0x5826/openwrt-packages-extras.git" >> feeds.conf.default
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
